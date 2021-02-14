@@ -5,7 +5,7 @@
 $ cd {catkin_workspace}/src
 $ git clone https://github.com/hiro-han/ar-car-car-controller.git car_controller
 $ cd {catkin_workspace}
-$ catkin_make
+$ catkin_make --pkg car_controller
 $ source devel/setup.bash
 ```
 

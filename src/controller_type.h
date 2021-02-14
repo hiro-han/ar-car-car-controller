@@ -2,5 +2,6 @@
 
 enum class ControllerType : int {
   ProCon = 0,
-  PS3 = 1
+  PS3 = 1,
+  OculusQuest2 = 2
 };
