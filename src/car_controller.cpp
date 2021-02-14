@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 
   publisher = n.advertise<car_control_msgs::RcCarControl>("car_control", 100);
 
-  ros::Subscriber subscriber = n.subscribe(topic_name, 50, joyCallback);
+  ros::Subscriber subscriber = n.subscribe(topic_name, 10, joyCallback);
   ros::spin();
 
   return 0;
