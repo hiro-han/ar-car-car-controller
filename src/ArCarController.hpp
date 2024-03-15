@@ -4,7 +4,6 @@
 #include <chrono>
 #include "ar_car_info/msg/control_info.hpp"
 #include "CarControlData.hpp"
-#include "SerialConnection.hpp"
 
 class ArCarController : public rclcpp::Node {
  public :
