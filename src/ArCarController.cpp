@@ -13,13 +13,15 @@ ArCarController::ArCarController(const rclcpp::NodeOptions& options) : ArCarCont
 ArCarController::ArCarController(const std::string& name_space, const rclcpp::NodeOptions& options) :
   Node("ar_car_controller", name_space, options) {
 
+  declare_parameter("device", "/dev/ttyACM0");
+
   control_info_subscription_ = this->create_subscription<ar_car_info::msg::ControlInfo>(
     "/unity/car_info",
     rclcpp::QoS(10),
     std::bind(&ArCarController::callback, this, std::placeholders::_1)
   );
 
-  std::string device = "/dev/ttyACM0";
+  std::string device = get_parameter("device").as_string();
   if (!serial_.initialize(device, SerialConnection::kB115200)) {
     RCLCPP_ERROR(this->get_logger(), "Serial initialize error");
   }
