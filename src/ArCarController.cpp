@@ -25,24 +25,20 @@ ArCarController::ArCarController(const std::string& name_space, const rclcpp::No
   if (!serial_.initialize(device, SerialConnection::kB115200)) {
     RCLCPP_ERROR(this->get_logger(), "Serial initialize error");
   }
+
+  timer_ = this->create_wall_timer(0.2s, std::bind(&ArCarController::sendSerial, this));
 }
 
 void ArCarController::callback(const ar_car_info::msg::ControlInfo::SharedPtr msg){
-  // RCLCPP_INFO(this->get_logger(), "Receive: steer = %f, accel = %f, camera_direction = %f", msg->steer, msg->accel, msg->camera_direction);
-
   data_.accel = msg->accel;
   data_.steer = msg->steer;
-  data_.camera_direction = msg->camera_direction;
-  
+  data_.camera_direction = msg->camera_direction;  
+}
+
+void ArCarController::sendSerial() {
   std::vector<uint8_t> array_data(data_.bin, data_.bin + 12);
-  // https://qiita.com/hamukun8686/items/5c640420bde7ffe54d3c#%E5%88%A9%E7%94%A8%E4%BE%8B
-
-  // https://www.delftstack.com/ja/howto/cpp/cpp-serial-communication/
-
   std::vector<uint8_t> packet = EncodePacket(array_data);
   if (!serial_.send(packet)) {
     RCLCPP_ERROR(this->get_logger(), "Serial send error");
   }
-}
-
-
+};

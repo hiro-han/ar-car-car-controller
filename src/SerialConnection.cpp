@@ -60,7 +60,10 @@ bool SerialConnection::send(const std::vector<uint8_t> &data) {
   size_t send_size = data.size();
   uint8_t array[send_size];
   std::copy(data.begin(), data.end(), array);
-  return write(port_, array, send_size) == send_size;
+
+  int ret = write(port_, array, send_size);
+  // std::cout << "ret = " << ret << ", size = " << send_size << std::endl;
+  return ret==send_size;
 }
 
 std::string SerialConnection::receive(const bool wait, const char terminate) {

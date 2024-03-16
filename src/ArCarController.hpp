@@ -15,9 +15,10 @@ class ArCarController : public rclcpp::Node {
 
  private:
   void callback(const ar_car_info::msg::ControlInfo::SharedPtr msg);
+  void sendSerial();
 
   rclcpp::Subscription<ar_car_info::msg::ControlInfo>::SharedPtr control_info_subscription_;
-
+  rclcpp::TimerBase::SharedPtr timer_;
   CarControlData data_;
   SerialConnection serial_;
 };
