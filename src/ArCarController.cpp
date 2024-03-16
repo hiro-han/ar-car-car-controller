@@ -28,7 +28,7 @@ ArCarController::ArCarController(const std::string& name_space, const rclcpp::No
 }
 
 void ArCarController::callback(const ar_car_info::msg::ControlInfo::SharedPtr msg){
-  RCLCPP_INFO(this->get_logger(), "Receive: steer = %f, accel = %f, camera_direction = %f", msg->steer, msg->accel, msg->camera_direction);
+  // RCLCPP_INFO(this->get_logger(), "Receive: steer = %f, accel = %f, camera_direction = %f", msg->steer, msg->accel, msg->camera_direction);
 
   data_.accel = msg->accel;
   data_.steer = msg->steer;

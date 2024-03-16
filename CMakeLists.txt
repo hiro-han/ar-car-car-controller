@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ar-car-controller)
+project(ar_car_controller)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -30,7 +30,7 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}/
 )
 
-set(TARGET ar-car-controller)
+set(TARGET ar_car_controller)
 add_executable(${TARGET}
   src/main.cpp
   src/ArCarController.cpp
@@ -45,7 +45,7 @@ list(REMOVE_ITEM target_options "-pedantic")
 
 
 
-set(TEST_TARGET test-serial)
+set(TEST_TARGET test_serial)
 add_executable(${TEST_TARGET}
   test/main.cpp
   test/SerialTest.cpp
@@ -58,5 +58,10 @@ install(TARGETS ${TEST_TARGET} DESTINATION lib/${PROJECT_NAME})
 get_target_property(target_options ${TEST_TARGET} COMPILE_OPTIONS)
 list(REMOVE_ITEM target_options "-pedantic")
 
+
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
 
 ament_package()

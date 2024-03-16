@@ -4,7 +4,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     params_file = launch.substitutions.LaunchConfiguration(
-        'params', default=[launch.substitutions.ThisLaunchFileDir(), '/../config/params.yaml']
+        'params', default=[launch.substitutions.ThisLaunchFileDir(), '/params.yaml'])
 
 
     return LaunchDescription([
@@ -15,10 +15,10 @@ def generate_launch_description():
         
         # Node for AR Car Controller
         Node(
-            package         = 'ar-car-controller',
-            namespace       = 'ar-car-controller',
-            executable      = 'ar-car-controller',
-            name            = 'ar-car-controller',
+            package         = 'ar_car_controller',
+            namespace       = 'ar_car_controller',
+            executable      = 'ar_car_controller',
+            name            = 'ar_car_controller',
             parameters      = [params_file]
             ),
 
@@ -28,6 +28,8 @@ def generate_launch_description():
             namespace       = 'v4l2_camera',
             executable      = 'v4l2_camera_node',
             name            = 'v4l2_camera_node',
-            parameters      = [params_file]
+            remappings=[
+                ('/v4l2_camera/image_raw/compressed', '/image_raw/compressed'),
+                ]
             ),
     ])
