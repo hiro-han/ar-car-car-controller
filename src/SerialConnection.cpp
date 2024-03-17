@@ -53,7 +53,9 @@ bool SerialConnection::send(const std::string &str) {
   char send_char[send_size];
   str.copy(send_char, str.size());
   send_char[str.size()] = '\0';
-  return write(port_, send_char, send_size) == send_size;
+  int ret = write(port_, send_char, send_size);
+  std::cout << "ret = " << ret << ", size = " << send_size << ", data = " << str << std::endl;
+  return ret==send_size;
 }
 
 bool SerialConnection::send(const std::vector<uint8_t> &data) {

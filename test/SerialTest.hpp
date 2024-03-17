@@ -17,6 +17,7 @@ class SerialTest : public rclcpp::Node {
 
  private:
   void callback();
+  void callback2();
 
   rclcpp::TimerBase::SharedPtr timer_;
   SerialConnection serial_;

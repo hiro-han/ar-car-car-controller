@@ -19,7 +19,7 @@ SerialTest::SerialTest(const std::string& name_space, const rclcpp::NodeOptions&
   }
   counter_ = 0;
 
-  timer_ = this->create_wall_timer(1s, std::bind(&SerialTest::callback, this));
+  timer_ = this->create_wall_timer(1s, std::bind(&SerialTest::callback2, this));
 };
 
 void SerialTest::callback() {
@@ -39,3 +39,22 @@ void SerialTest::callback() {
   counter_++;
 };
 
+void SerialTest::callback2() {
+  CarControlData data;
+  data.steer = 1.1f * counter_;
+  data.accel = 2.2f * counter_;
+  data.camera_direction = 3.3f * counter_;
+
+  RCLCPP_INFO(this->get_logger(), "Receive: steer = %f, accel = %f, camera_direction = %f", data.steer, data.accel, data.camera_direction);
+
+  std::stringstream ss;
+  ss << std::setprecision(2);
+  ss  << data.accel << "," << data.steer << "," << data.camera_direction;
+
+//  std::cout << ss << std::endl;
+  RCLCPP_INFO(this->get_logger(), "data = %s\n", ss.str().c_str());
+  if (!serial_.send(ss.str())) {
+    RCLCPP_ERROR(this->get_logger(), "Serial send error");
+  }
+  counter_++;
+};

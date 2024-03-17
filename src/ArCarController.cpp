@@ -1,5 +1,6 @@
 #include "ArCarController.hpp"
 #include <vector>
+#include <sstream>
 #include "rclcpp/rclcpp.hpp"
 #include "SerialPacket.hpp"
 #include "SerialConnection.hpp"
@@ -26,7 +27,7 @@ ArCarController::ArCarController(const std::string& name_space, const rclcpp::No
     RCLCPP_ERROR(this->get_logger(), "Serial initialize error");
   }
 
-  timer_ = this->create_wall_timer(0.2s, std::bind(&ArCarController::sendSerial, this));
+  timer_ = this->create_wall_timer(0.2s, std::bind(&ArCarController::sendSerial2, this));
 }
 
 void ArCarController::callback(const ar_car_info::msg::ControlInfo::SharedPtr msg){
@@ -39,6 +40,17 @@ void ArCarController::sendSerial() {
   std::vector<uint8_t> array_data(data_.bin, data_.bin + 12);
   std::vector<uint8_t> packet = EncodePacket(array_data);
   if (!serial_.send(packet)) {
+    RCLCPP_ERROR(this->get_logger(), "Serial send error");
+  }
+};
+
+void ArCarController::sendSerial2() {
+  std::stringstream ss;
+  ss << std::setprecision(2);
+  ss << data_.accel << "," << data_.steer << "," << data_.camera_direction;
+
+//  std::cout << "data = " << ss.str() << std::endl;
+  if (!serial_.send(ss.str())) {
     RCLCPP_ERROR(this->get_logger(), "Serial send error");
   }
 };
