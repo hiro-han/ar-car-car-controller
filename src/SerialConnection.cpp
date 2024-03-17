@@ -72,6 +72,7 @@ std::string SerialConnection::receive(const bool wait, const char terminate) {
   std::string receive_str;
   bool receving = false;
   char receive_char;
+  int count = 0;
   while (true) {
     int read_size = read(port_, &receive_char, 1);
     if (read_size > 0) {
@@ -80,11 +81,14 @@ std::string SerialConnection::receive(const bool wait, const char terminate) {
       if (receive_char == terminate) {
         break;
       }
+    } else if (count > 20) {
+      break; 
     } else {
       if (!wait || receving) {
         break;
       }
     }
+    count++;
   }
   return receive_str;
 }

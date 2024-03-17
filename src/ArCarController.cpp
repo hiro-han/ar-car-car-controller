@@ -27,7 +27,8 @@ ArCarController::ArCarController(const std::string& name_space, const rclcpp::No
     RCLCPP_ERROR(this->get_logger(), "Serial initialize error");
   }
 
-  timer_ = this->create_wall_timer(0.2s, std::bind(&ArCarController::sendSerial2, this));
+  sleep(1);
+  timer_ = this->create_wall_timer(0.1s, std::bind(&ArCarController::sendSerial2, this));
 }
 
 void ArCarController::callback(const ar_car_info::msg::ControlInfo::SharedPtr msg){
@@ -49,8 +50,11 @@ void ArCarController::sendSerial2() {
   ss << std::setprecision(2);
   ss << data_.accel << "," << data_.steer << "," << data_.camera_direction;
 
-//  std::cout << "data = " << ss.str() << std::endl;
   if (!serial_.send(ss.str())) {
     RCLCPP_ERROR(this->get_logger(), "Serial send error");
   }
+
+  // usleep(100000);
+  // std::string receive = serial_.receive(true);
+  // std::cout << "receive = " << receive << std::endl;
 };
