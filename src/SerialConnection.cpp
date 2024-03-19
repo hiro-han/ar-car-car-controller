@@ -34,10 +34,21 @@ bool SerialConnection::initialize(const std::string &device, const BaudRate &rat
     return false;
   }
 
-  current_settings_.c_iflag = IGNPAR;
-  current_settings_.c_oflag = 0;
-  current_settings_.c_lflag = 0;
+  // current_settings_.c_iflag = IGNPAR;
+  // current_settings_.c_oflag = 0;
+  // current_settings_.c_lflag = 0;
+  // current_settings_.c_cflag= (CS8 | CLOCAL | CREAD);
+
   current_settings_.c_cflag= (CS8 | CLOCAL | CREAD);
+  current_settings_.c_cflag &= ~PARENB;
+  current_settings_.c_cflag &= ~CSTOPB;
+  current_settings_.c_cflag &= ~CSIZE;
+  current_settings_.c_cflag |= CS8;
+  current_settings_.c_cflag &= ~CRTSCTS;
+  current_settings_.c_cflag |= CREAD | CLOCAL;
+  current_settings_.c_iflag &= ~(IXON | IXOFF | IXANY);
+  current_settings_.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+  current_settings_.c_oflag &= ~OPOST;
 
   if (tcsetattr(port_, TCSANOW, &current_settings_) == kError) {
     std::cout << "tcsetattr error."<< std::endl;
@@ -54,8 +65,9 @@ bool SerialConnection::send(const std::string &str) {
   str.copy(send_char, str.size());
   send_char[str.size()] = '\0';
   int ret = write(port_, send_char, send_size);
-  std::cout << "ret = " << ret << ", size = " << send_size << ", data = " << str << std::endl;
-  return ret==send_size;
+  // std::cout << "ret = " << ret << ", size = " << send_size << ", data = " << str << std::endl;
+  std::cout << "str = " << str << std::endl;
+  return ret==static_cast<int>(send_size);
 }
 
 bool SerialConnection::send(const std::vector<uint8_t> &data) {
@@ -65,7 +77,7 @@ bool SerialConnection::send(const std::vector<uint8_t> &data) {
 
   int ret = write(port_, array, send_size);
   // std::cout << "ret = " << ret << ", size = " << send_size << std::endl;
-  return ret==send_size;
+  return ret==static_cast<int>(send_size);
 }
 
 std::string SerialConnection::receive(const bool wait, const char terminate) {
@@ -75,6 +87,7 @@ std::string SerialConnection::receive(const bool wait, const char terminate) {
   int count = 0;
   while (true) {
     int read_size = read(port_, &receive_char, 1);
+    // std::cout << "read_size = " << read_size << ", receive_char = " << receive_char << std::endl;
     if (read_size > 0) {
       receving = true;
       receive_str.append(1, receive_char);
