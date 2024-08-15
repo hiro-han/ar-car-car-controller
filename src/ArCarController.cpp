@@ -14,7 +14,7 @@ ArCarController::ArCarController(const rclcpp::NodeOptions& options) : ArCarCont
 ArCarController::ArCarController(const std::string& name_space, const rclcpp::NodeOptions& options) :
   Node("ar_car_controller", name_space, options) {
 
-  declare_parameter("device", "/dev/ttyACM1");
+  declare_parameter("device", "/dev/ttyACM0");
 
   control_info_subscription_ = this->create_subscription<ar_car_info::msg::ControlInfo>(
     "/unity/car_info",
@@ -28,7 +28,7 @@ ArCarController::ArCarController(const std::string& name_space, const rclcpp::No
   }
 
   sleep(1);
-  timer_ = this->create_wall_timer(0.1s, std::bind(&ArCarController::sendSerial2, this));
+  timer_ = this->create_wall_timer(0.05s, std::bind(&ArCarController::sendSerial2, this));
   // timer2_ = this->create_wall_timer(0.1s, std::bind(&ArCarController::receiveSerial, this));
 }
 
@@ -54,7 +54,6 @@ void ArCarController::sendSerial2() {
   std::stringstream ss;
   ss << std::setprecision(2);
   ss << data_.accel << "," << data_.steer << "," << data_.camera_direction;
-
   if (!serial_.send(ss.str())) {
     RCLCPP_ERROR(this->get_logger(), "Serial send error");
   }
