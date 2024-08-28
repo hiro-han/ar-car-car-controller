@@ -1,4 +1,5 @@
 #include "SerialConnection.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 const int SerialConnection::kError = -1;
 
@@ -13,25 +14,28 @@ SerialConnection::~SerialConnection() {
   }
 }
 
-bool SerialConnection::initialize(const std::string &device, const BaudRate &rate) {
+int SerialConnection::initialize(const std::string &device, const BaudRate &rate) {
   port_ = open(device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
   if (port_ == kError) {
+    // RCLCPP_ERROR(this->get_logger(), "Device open error. device: %s", device.c_str());
     std::cout << "Device open error. device : \"" << device << "\""<< std::endl;
-    return false;
+    return 1;
   }
 
   if (tcgetattr(port_, &old_settings_) == kError) {
+    // RCLCPP_ERROR(this->get_logger(), "tcgetattr error.");
     std::cout << "tcgetattr error."<< std::endl;
     close(port_);
-    return false;
+    return 2;
   }
 
   current_settings_ = old_settings_;
 
   if ((cfsetispeed(&current_settings_, rate) == kError) || (cfsetospeed(&current_settings_, rate) == kError)) {
+    // RCLCPP_ERROR(this->get_logger(), "cfsetispeed or cfsetospeed error.");
     std::cout << "cfsetispeed or cfsetospeed error."<< std::endl;
     close(port_);
-    return false;
+    return 3;
   }
 
   // current_settings_.c_iflag = IGNPAR;
@@ -53,10 +57,10 @@ bool SerialConnection::initialize(const std::string &device, const BaudRate &rat
   if (tcsetattr(port_, TCSANOW, &current_settings_) == kError) {
     std::cout << "tcsetattr error."<< std::endl;
     close(port_);
-    return false;
+    return 4;
   }
 
-  return true;
+  return 0;
 }
 
 bool SerialConnection::send(const std::string &str) {

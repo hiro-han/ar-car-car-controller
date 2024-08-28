@@ -24,7 +24,7 @@ class SerialConnection {
 
   SerialConnection();
   virtual ~SerialConnection();
-  bool initialize(const std::string &device, const BaudRate &baudrate);
+  int initialize(const std::string &device, const BaudRate &baudrate);
   bool send(const std::string &str);
   bool send(const std::vector<uint8_t> &data);
   std::string receive(const bool wait=true, const char terminate='\0');

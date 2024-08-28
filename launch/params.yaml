@@ -1,3 +1,4 @@
 ar_car_controller:
   ros__parameters:
     device: "/dev/ttyAMC0"
+    speed_limit_rate: 0.5

@@ -26,4 +26,5 @@ class ArCarController : public rclcpp::Node {
   CarControlData data_;
   SerialConnection serial_;
   std::mutex mutex_;
+  float speed_limit_rate_;
 };

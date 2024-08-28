@@ -14,7 +14,16 @@ ArCarController::ArCarController(const rclcpp::NodeOptions& options) : ArCarCont
 ArCarController::ArCarController(const std::string& name_space, const rclcpp::NodeOptions& options) :
   Node("ar_car_controller", name_space, options) {
 
-  declare_parameter("device", "/dev/ttyACM0");
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+
+  speed_limit_rate_ = declare_parameter("speed_limit_rate", 1.0f);
+  if (speed_limit_rate_ <= 0.0f || speed_limit_rate_ > 1.0f) {
+    RCLCPP_ERROR(this->get_logger(), "speed_limit_rate should be 0.0 < speed_limit_rate <= 1.0");
+    speed_limit_rate_ = std::max(std::min(speed_limit_rate_, 1.0f), 0.0f);
+  }
+  RCLCPP_INFO(this->get_logger(), "speed_limit_rate = %f", speed_limit_rate_);
+
+  std::string device = declare_parameter("device", "/dev/ttyACM0");
 
   control_info_subscription_ = this->create_subscription<ar_car_info::msg::ControlInfo>(
     "/unity/car_info",
@@ -22,9 +31,9 @@ ArCarController::ArCarController(const std::string& name_space, const rclcpp::No
     std::bind(&ArCarController::callback, this, std::placeholders::_1)
   );
 
-  std::string device = get_parameter("device").as_string();
-  if (!serial_.initialize(device, SerialConnection::kB9600)) {
-    RCLCPP_ERROR(this->get_logger(), "Serial initialize error");
+  auto ret = serial_.initialize(device, SerialConnection::kB9600);
+  if (ret != 0) {
+    RCLCPP_ERROR(this->get_logger(), "Serial initialize error. code: %d,  device: %s", ret, device.c_str());
   }
 
   sleep(1);
@@ -51,9 +60,10 @@ void ArCarController::sendSerial() {
 };
 
 void ArCarController::sendSerial2() {
+  float accel = data_.accel * speed_limit_rate_;
   std::stringstream ss;
   ss << std::setprecision(2);
-  ss << data_.accel << "," << data_.steer << "," << data_.camera_direction;
+  ss << accel << "," << data_.steer << "," << data_.camera_direction;
   if (!serial_.send(ss.str())) {
     RCLCPP_ERROR(this->get_logger(), "Serial send error");
   }
