@@ -43,8 +43,6 @@ install(TARGETS ${TARGET} DESTINATION lib/${PROJECT_NAME})
 get_target_property(target_options ${TARGET} COMPILE_OPTIONS)
 list(REMOVE_ITEM target_options "-pedantic")
 
-
-
 set(TEST_TARGET test_serial)
 add_executable(${TEST_TARGET}
   test/main.cpp

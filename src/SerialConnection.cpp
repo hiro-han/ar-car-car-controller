@@ -3,7 +3,7 @@
 
 const int SerialConnection::kError = -1;
 
-SerialConnection::SerialConnection() : port_(kError) {
+SerialConnection::SerialConnection(const bool enable_cobs = true) : port_(kError), enable_cobs_(enable_cobs) {
   // nop
 }
 
@@ -64,14 +64,7 @@ int SerialConnection::initialize(const std::string &device, const BaudRate &rate
 }
 
 bool SerialConnection::send(const std::string &str) {
-  size_t send_size = str.size() + 1;
-  char send_char[send_size];
-  str.copy(send_char, str.size());
-  send_char[str.size()] = '\0';
-  int ret = write(port_, send_char, send_size);
-  // std::cout << "ret = " << ret << ", size = " << send_size << ", data = " << str << std::endl;
-  std::cout << "str = " << str << std::endl;
-  return ret==static_cast<int>(send_size);
+  return send(str.c_str());
 }
 
 bool SerialConnection::send(const std::vector<uint8_t> &data) {
@@ -79,35 +72,99 @@ bool SerialConnection::send(const std::vector<uint8_t> &data) {
   uint8_t array[send_size];
   std::copy(data.begin(), data.end(), array);
 
-  int ret = write(port_, array, send_size);
+  uint8_t encoded_array[2 * send_size];
+  if (enable_cobs_) {
+    send_size = encode(array, send_size, encoded_array);
+  }
+
+  int ret = write(port_, encoded_array, send_size);
   // std::cout << "ret = " << ret << ", size = " << send_size << std::endl;
   return ret==static_cast<int>(send_size);
 }
 
-std::string SerialConnection::receive(const bool wait, const char terminate) {
-  std::string receive_str;
+size_t SerialConnection::receive(const bool wait, const char* buffer, const size_t buffer_size, const char terminate = '\0') {
   bool receving = false;
+  char receive_buffer[2 * buffer_size];
   char receive_char;
-  int count = 0;
+  int received_size = 0;
   while (true) {
     int read_size = read(port_, &receive_char, 1);
-    // std::cout << "read_size = " << read_size << ", receive_char = " << receive_char << std::endl;
-    if (read_size > 0) {
+    if (read_size == 1) {
+      receive_buffer[received_size] = receive_char;
+      received_size++;
       receving = true;
-      receive_str.append(1, receive_char);
+
       if (receive_char == terminate) {
         break;
       }
-    } else if (count > 20) {
+    } else if (received_size > buffer_size) {
       break; 
     } else {
       if (!wait || receving) {
         break;
       }
     }
-    count++;
   }
-  return receive_str;
+
+  if (enable_cobs_) {
+    received_size = decode(receive_buffer, received_size, buffer);
+  } else {
+    std::memcpy(buffer, receive_buffer, received_size);
+  }
+  return received_size;
 }
 
+size_t SerialConnection::encode(const uint8_t* buffer, size_t size, uint8_t* encodedBuffer) {
+  size_t read_index  = 0;
+  size_t write_index = 1;
+  size_t code_index  = 0;
+  uint8_t code       = 1;
 
+  while (read_index < size) {
+    if (buffer[read_index] == 0) {
+      encodedBuffer[code_index] = code;
+      code = 1;
+      code_index = write_index++;
+      read_index++;
+    } else {
+      encodedBuffer[write_index++] = buffer[read_index++];
+      code++;
+
+      if (code == 0xFF) {
+        encodedBuffer[code_index] = code;
+        code = 1;
+        code_index = write_index++;
+      }
+    }
+  }
+  encodedBuffer[code_index] = code;
+  return write_index;
+}
+
+size_t SerialConnection::decode(const uint8_t* encodedBuffer, size_t size, uint8_t* decodedBuffer) {
+  if (size == 0) return 0;
+
+  size_t read_index  = 0;
+  size_t write_index = 0;
+  uint8_t code       = 0;
+  uint8_t i          = 0;
+
+  while (read_index < size) {
+    code = encodedBuffer[read_index];
+
+    if (read_index + code > size && code != 1) {
+      return 0;
+    }
+
+    read_index++;
+
+    for (i = 1; i < code; i++) {
+      decodedBuffer[write_index++] = encodedBuffer[read_index++];
+    }
+
+    if (code != 0xFF && read_index != size) {
+      decodedBuffer[write_index++] = '\0';
+    }
+  }
+  return write_index;
+}
