@@ -3,9 +3,13 @@
 
 const int SerialConnection::kError = -1;
 
-SerialConnection::SerialConnection(const bool enable_cobs = true) : port_(kError), enable_cobs_(enable_cobs) {
+SerialConnection::SerialConnection(const rclcpp::Logger& logger) : logger_(logger), port_(kError), enable_cobs_(true) {
   // nop
 }
+
+// SerialConnection::SerialConnection(const bool enable_cobs = true) : port_(kError), enable_cobs_(enable_cobs) {
+//   // nop
+// }
 
 SerialConnection::~SerialConnection() {
   if (port_ != kError) {
@@ -17,14 +21,15 @@ SerialConnection::~SerialConnection() {
 int SerialConnection::initialize(const std::string &device, const BaudRate &rate) {
   port_ = open(device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
   if (port_ == kError) {
+    RCLCPP_ERROR(logger_, "Device open error. device: %s", device.c_str());
     // RCLCPP_ERROR(this->get_logger(), "Device open error. device: %s", device.c_str());
     std::cout << "Device open error. device : \"" << device << "\""<< std::endl;
     return 1;
   }
 
   if (tcgetattr(port_, &old_settings_) == kError) {
-    // RCLCPP_ERROR(this->get_logger(), "tcgetattr error.");
-    std::cout << "tcgetattr error."<< std::endl;
+    RCLCPP_ERROR(logger_, "tcgetattr error.");
+    // std::cout << "tcgetattr error."<< std::endl;
     close(port_);
     return 2;
   }
@@ -32,8 +37,8 @@ int SerialConnection::initialize(const std::string &device, const BaudRate &rate
   current_settings_ = old_settings_;
 
   if ((cfsetispeed(&current_settings_, rate) == kError) || (cfsetospeed(&current_settings_, rate) == kError)) {
-    // RCLCPP_ERROR(this->get_logger(), "cfsetispeed or cfsetospeed error.");
-    std::cout << "cfsetispeed or cfsetospeed error."<< std::endl;
+    RCLCPP_ERROR(logger_, "cfsetispeed or cfsetospeed error.");
+    // std::cout << "cfsetispeed or cfsetospeed error."<< std::endl;
     close(port_);
     return 3;
   }
@@ -55,7 +60,8 @@ int SerialConnection::initialize(const std::string &device, const BaudRate &rate
   current_settings_.c_oflag &= ~OPOST;
 
   if (tcsetattr(port_, TCSANOW, &current_settings_) == kError) {
-    std::cout << "tcsetattr error."<< std::endl;
+    RCLCPP_ERROR(logger_, "tcsetattr error");
+    // std::cout << "tcsetattr error."<< std::endl;
     close(port_);
     return 4;
   }
@@ -69,24 +75,27 @@ bool SerialConnection::send(const std::string &str) {
 
 bool SerialConnection::send(const std::vector<uint8_t> &data) {
   size_t send_size = data.size();
-  uint8_t array[send_size];
+  uint8_t* array = new uint8_t[send_size];
   std::copy(data.begin(), data.end(), array);
 
-  uint8_t encoded_array[2 * send_size];
+  uint8_t* encoded_array = new uint8_t[2 * send_size];
   if (enable_cobs_) {
     send_size = encode(array, send_size, encoded_array);
   }
 
   int ret = write(port_, encoded_array, send_size);
   // std::cout << "ret = " << ret << ", size = " << send_size << std::endl;
+  // RCLCPP_ERROR(this->get_logger(), "tcsetattr error");
+  delete array;
+  delete encoded_array;
   return ret==static_cast<int>(send_size);
 }
 
-size_t SerialConnection::receive(const bool wait, const char* buffer, const size_t buffer_size, const char terminate = '\0') {
+size_t SerialConnection::receive(const bool wait, uint8_t* const buffer, const size_t buffer_size, const char terminate = '\0') {
   bool receving = false;
-  char receive_buffer[2 * buffer_size];
+  uint8_t *receive_buffer = new uint8_t[2 * buffer_size];
   char receive_char;
-  int received_size = 0;
+  size_t received_size = 0;
   while (true) {
     int read_size = read(port_, &receive_char, 1);
     if (read_size == 1) {
@@ -111,10 +120,11 @@ size_t SerialConnection::receive(const bool wait, const char* buffer, const size
   } else {
     std::memcpy(buffer, receive_buffer, received_size);
   }
+  delete receive_buffer;
   return received_size;
 }
 
-size_t SerialConnection::encode(const uint8_t* buffer, size_t size, uint8_t* encodedBuffer) {
+size_t SerialConnection::encode(const uint8_t* const buffer, size_t size, uint8_t* encodedBuffer) const {
   size_t read_index  = 0;
   size_t write_index = 1;
   size_t code_index  = 0;
@@ -141,7 +151,7 @@ size_t SerialConnection::encode(const uint8_t* buffer, size_t size, uint8_t* enc
   return write_index;
 }
 
-size_t SerialConnection::decode(const uint8_t* encodedBuffer, size_t size, uint8_t* decodedBuffer) {
+size_t SerialConnection::decode(const uint8_t* const buffer, size_t size, uint8_t* decodedBuffer) const {
   if (size == 0) return 0;
 
   size_t read_index  = 0;
@@ -150,7 +160,7 @@ size_t SerialConnection::decode(const uint8_t* encodedBuffer, size_t size, uint8
   uint8_t i          = 0;
 
   while (read_index < size) {
-    code = encodedBuffer[read_index];
+    code = buffer[read_index];
 
     if (read_index + code > size && code != 1) {
       return 0;
@@ -159,7 +169,7 @@ size_t SerialConnection::decode(const uint8_t* encodedBuffer, size_t size, uint8
     read_index++;
 
     for (i = 1; i < code; i++) {
-      decodedBuffer[write_index++] = encodedBuffer[read_index++];
+      decodedBuffer[write_index++] = buffer[read_index++];
     }
 
     if (code != 0xFF && read_index != size) {

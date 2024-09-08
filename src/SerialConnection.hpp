@@ -9,7 +9,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <vector>
-#include "3rdlib/PacketSerial/src/Encoding/COBS.h"
+#include <rclcpp/rclcpp.hpp>
 
 class SerialConnection {
  public:
@@ -23,17 +23,19 @@ class SerialConnection {
     kB115200 = B115200,
    };
 
-  SerialConnection(const bool enable_cobs);
+  SerialConnection(const rclcpp::Logger& logger);
+  // SerialConnection(const bool enable_cobs);
   virtual ~SerialConnection();
   int initialize(const std::string &device, const BaudRate &baudrate);
   bool send(const std::string &str);
   bool send(const std::vector<uint8_t> &data);
-  size_t receive(const bool wait, const char* buffer, const size_t buffer_size, const char terminate);
+  size_t receive(const bool wait, uint8_t* const buffer, const size_t buffer_size, const char terminate);
 
  private:
   size_t encode(const uint8_t* const buffer, size_t size, uint8_t* encodedBuffer) const;
-  size_t decode(const uint8_t* const encodedBuffer, size_t size, uint8_t* decodedBuffer) const;
+  size_t decode(const uint8_t* const buffer, size_t size, uint8_t* decodedBuffer) const;
 
+  rclcpp::Logger logger_;
   static const int kError;
   termios old_settings_;
   termios current_settings_;

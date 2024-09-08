@@ -47,7 +47,7 @@ set(TEST_TARGET test_serial)
 add_executable(${TEST_TARGET}
   test/main.cpp
   test/SerialTest.cpp
-  test/SerialConnection.cpp
+  src/SerialConnection.cpp
 )
 ament_target_dependencies(${TEST_TARGET} "rclcpp")
 ament_target_dependencies(${TEST_TARGET} "ar_car_info")

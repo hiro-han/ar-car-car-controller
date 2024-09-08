@@ -5,8 +5,9 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <chrono>
+#include <memory>
 #include "ar_car_info/msg/control_info.hpp"
-#include "SerialConnection.hpp"
+#include "../src/SerialConnection.hpp"
 
 class SerialTest : public rclcpp::Node {
  public :
@@ -16,11 +17,12 @@ class SerialTest : public rclcpp::Node {
   virtual ~SerialTest() {};
 
  private:
-  void callback();
-  void callback2();
+  void send_callback();
+  void receive_callback();
 
-  rclcpp::TimerBase::SharedPtr timer_;
-  SerialConnection serial_;
+  rclcpp::TimerBase::SharedPtr timer_send_;
+  rclcpp::TimerBase::SharedPtr timer_receive_;
+  std::shared_ptr<SerialConnection> serial_;
 
   int counter_;
 };
