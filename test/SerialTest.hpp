@@ -25,6 +25,7 @@ class SerialTest : public rclcpp::Node {
   std::shared_ptr<SerialConnection> serial_;
 
   int counter_;
+  bool send_binary_;
 };
 
 // #endif // SERIAL_TEST_H_

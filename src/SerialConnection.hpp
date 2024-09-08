@@ -29,7 +29,8 @@ class SerialConnection {
   int initialize(const std::string &device, const BaudRate &baudrate);
   bool send(const std::string &str);
   bool send(const std::vector<uint8_t> &data);
-  size_t receive(const bool wait, uint8_t* const buffer, const size_t buffer_size, const char terminate);
+  bool send(const uint8_t* data, const size_t size);
+  size_t receive(const bool wait, uint8_t* const buffer, const size_t buffer_size, const uint8_t terminate);
 
  private:
   size_t encode(const uint8_t* const buffer, size_t size, uint8_t* encodedBuffer) const;

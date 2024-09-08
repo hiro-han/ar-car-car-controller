@@ -61,6 +61,6 @@ void ArCarController::sendSerial() {
 
 void ArCarController::receiveSerial() {
   uint8_t buffer[200];
-  size_t size = serial_->receive(true, buffer, 200, '\n');
+  size_t size = serial_->receive(true, buffer, 200, 0);
   std::cout << "receive = " << buffer << ", size = " << size << std::endl;
 };
