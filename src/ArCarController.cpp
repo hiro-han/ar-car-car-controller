@@ -37,7 +37,8 @@ ArCarController::ArCarController(const std::string& name_space, const rclcpp::No
   }
 
   sleep(1);
-  timer_ = this->create_wall_timer(0.1s, std::bind(&ArCarController::receiveSerial, this));
+  timer_ = this->create_wall_timer(0.05s, std::bind(&ArCarController::sendSerial, this));
+  // timer_ = this->create_wall_timer(0.1s, std::bind(&ArCarController::receiveSerial, this));
 }
 
 void ArCarController::callback(const ar_car_info::msg::ControlInfo::SharedPtr msg){
@@ -53,6 +54,7 @@ void ArCarController::sendSerial() {
   std::stringstream ss;
   ss << std::setprecision(2);
   ss << accel << "," << data_.steer << "," << data_.camera_direction;
+  RCLCPP_INFO(this->get_logger(), "send: steer = %f, accel = %f, camera_direction = %f", data_.steer, data_.accel, data_.camera_direction);
   if (!serial_->send(ss.str())) {
     RCLCPP_ERROR(this->get_logger(), "Serial send error");
   }
