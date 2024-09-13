@@ -18,6 +18,6 @@ def generate_launch_description():
             namespace       = 'ar_car_controller',
             executable      = 'ar_car_controller',
             name            = 'ar_car_controller',
-            parameters      = [{'device': "/dev/ttyAMC0", 'speed_limit_rate': 0.5}]
+            parameters      = [{'device': "/dev/ttyACM0", 'speed_limit_rate': 0.5}]
         )
     ])

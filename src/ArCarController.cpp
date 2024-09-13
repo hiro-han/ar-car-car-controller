@@ -50,14 +50,24 @@ void ArCarController::callback(const ar_car_info::msg::ControlInfo::SharedPtr ms
 }
 
 void ArCarController::sendSerial() {
+  mutex_.lock();
   float accel = data_.accel * speed_limit_rate_;
-  std::stringstream ss;
-  ss << std::setprecision(2);
-  ss << accel << "," << data_.steer << "," << data_.camera_direction;
-  RCLCPP_INFO(this->get_logger(), "send: steer = %f, accel = %f, camera_direction = %f", data_.steer, data_.accel, data_.camera_direction);
-  if (!serial_->send(ss.str())) {
+//   std::stringstream ss;
+//   ss << std::setprecision(5);
+//   ss << accel << "," << data_.steer << "," << data_.camera_direction;
+// //  RCLCPP_INFO(this->get_logger(), "send: steer = %f, accel = %f, camera_direction = %f", data_.steer, data_.accel, data_.camera_direction);
+//   RCLCPP_INFO(this->get_logger(), "send: data = %s", ss.str().c_str());
+//   if (!serial_->send((const uint8_t*)ss.str().c_str(), ss.str().length())) {
+//     RCLCPP_ERROR(this->get_logger(), "Serial send error");
+//   }
+
+  size_t buffer_size = 15;
+  char buffer[buffer_size];
+  snprintf(buffer, buffer_size, "%.2f,%.2f,%.2f", accel, data_.steer, data_.camera_direction);
+  if (!serial_->send((const uint8_t*)buffer, buffer_size)) {
     RCLCPP_ERROR(this->get_logger(), "Serial send error");
   }
+  mutex_.unlock();
 };
 
 

@@ -70,8 +70,6 @@ bool SerialConnection::send(const std::string &str) {
 }
 
 bool SerialConnection::send(const std::vector<uint8_t> &data) {
-  RCLCPP_INFO(logger_, "step 3");
-
   size_t send_size = data.size();
   uint8_t* array = new uint8_t[send_size];
   std::copy(data.begin(), data.end(), array);
@@ -82,8 +80,6 @@ bool SerialConnection::send(const std::vector<uint8_t> &data) {
 
 
 bool SerialConnection::send(const uint8_t* data, const size_t size) {
-  RCLCPP_INFO(logger_, "step 3");
-
   size_t send_size = size;
 
   RCLCPP_DEBUG(logger_, "send size1 = %ld", send_size);
@@ -108,12 +104,7 @@ bool SerialConnection::send(const uint8_t* data, const size_t size) {
   //   RCLCPP_DEBUG(logger_, "send data = %u", encoded_array[i]);
   // }
 
-  RCLCPP_INFO(logger_, "step 4");
-
   int ret = write(port_, encoded_array, send_size);
-
-  RCLCPP_INFO(logger_, "step 5");
-
 
   delete encoded_array;
   return ret==static_cast<int>(send_size);
